@@ -8,25 +8,26 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function Analyse() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setUploadedFile(file);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      setUploadedFiles(fileArray);
       toast({
-        title: "Fichier téléchargé",
-        description: `${file.name} est prêt pour l'analyse`,
+        title: "Fichiers téléchargés",
+        description: `${fileArray.length} image(s) prête(s) pour l'analyse`,
       });
     }
   };
 
   const handleAnalyze = async () => {
-    if (!uploadedFile) {
+    if (uploadedFiles.length === 0) {
       toast({
         title: "Erreur",
-        description: "Veuillez d'abord télécharger un screenshot",
+        description: "Veuillez d'abord télécharger des screenshots",
         variant: "destructive",
       });
       return;
@@ -64,28 +65,33 @@ export default function Analyse() {
               <FileImage className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <Label htmlFor="file-upload" className="cursor-pointer">
                 <span className="text-sm text-muted-foreground">
-                  Glissez votre screenshot ici ou cliquez pour sélectionner
+                  Glissez vos screenshots ici ou cliquez pour sélectionner (plusieurs images)
                 </span>
                 <Input
                   id="file-upload"
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={handleFileUpload}
                 />
               </Label>
             </div>
 
-            {uploadedFile && (
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                <FileImage className="w-4 h-4" />
-                <span className="text-sm font-medium">{uploadedFile.name}</span>
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                {uploadedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <FileImage className="w-4 h-4" />
+                    <span className="text-sm font-medium">{file.name}</span>
+                  </div>
+                ))}
               </div>
             )}
 
             <Button 
               onClick={handleAnalyze}
-              disabled={!uploadedFile || isAnalyzing}
+              disabled={uploadedFiles.length === 0 || isAnalyzing}
               className="w-full"
             >
               {isAnalyzing ? (
@@ -114,7 +120,7 @@ export default function Analyse() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
                 <p className="text-muted-foreground">Extraction des cotes en cours...</p>
               </div>
-            ) : uploadedFile ? (
+            ) : uploadedFiles.length > 0 ? (
               <div className="space-y-4">
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <h4 className="font-medium mb-2">Cotes détectées :</h4>
@@ -140,7 +146,7 @@ export default function Analyse() {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                Téléchargez un screenshot pour voir les résultats
+                Téléchargez des screenshots pour voir les résultats
               </div>
             )}
           </CardContent>
